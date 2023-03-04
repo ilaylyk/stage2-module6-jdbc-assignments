@@ -27,6 +27,24 @@ public class SimpleJDBCRepository {
     private static final String FIND_USER_BY_NAME_SQL = "SELECT * FROM myusers WHERE firstname = ?";
     private static final String FIND_ALL_USERS_SQL = "SELECT * FROM myusers";
 
+    public Long createUser(User user) {
+        Long id = null;
+        try (Connection con = CustomDataSource.getInstance().getConnection();
+             PreparedStatement statement = con.prepareStatement(CREATE_USER_SQL, Statement.RETURN_GENERATED_KEYS)) {
+            statement.setObject(1, user.getFirstName());
+            statement.setObject(2, user.getLastName());
+            statement.setObject(3, user.getAge());
+            statement.execute();
+            ResultSet generatedKeys = statement.getGeneratedKeys();
+            if (generatedKeys.next()) {
+                id = generatedKeys.getLong(1);
+            }
+        } catch (SQLException e) {
+            throw new RuntimeException(e);
+        }
+        return id;
+    }
+
     public User findUserById(Long userId) {
         try(Connection con = CustomDataSource.getInstance().getConnection();
             PreparedStatement prepareStatement = con.prepareStatement(FIND_USER_BY_ID_SQL)) {
